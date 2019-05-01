@@ -5,8 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ModSorter"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
+
+        Title="ModSorter by Mehni" Height="600" Width="800">
+    <Grid Name ="MainGrid">
+        <ListBox Name ="listBox" HorizontalAlignment="Left" Margin="10, 80, 0, 0" Width="500" Height="280" VerticalAlignment="Top">
+            <ListBoxItem>No mods found</ListBoxItem>
+        </ListBox>
+        <TextBox Name="textBox" Height="40" Margin="10,20,0,0" TextWrapping="Wrap" Text="C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64.exe" VerticalAlignment="Top" HorizontalAlignment="Left" Width="387.809" TextChanged="TextBox_TextChanged"/>
+        <Button Content="open folder" HorizontalAlignment="Left" Height="40" Margin="402.809,20,0,0" VerticalAlignment="Top" Width="93.587" Click="Button_Click" />
+        <Button Content="Move up" HorizontalAlignment="Left" Margin="515,133,0,0" VerticalAlignment="Top" Width="75" Click="MoveUpClicked"/>
+        <Button Content="Move down" HorizontalAlignment="Left" Margin="515,158,0,0" VerticalAlignment="Top" Width="75" Click="MoveDownClicked"/>
     </Grid>
 </Window>
