@@ -28,8 +28,18 @@ namespace ModSorter
         {
             InitializeComponent();
             modConfig = XmlFileReaderUtility.GetModsConfig();
-            TryLoadFolder(textBox.Text);
+            TryLoadFolder(@"D:\SteamLibrary\steamapps\common\RimWorld");
             SetVersion();
+        }
+
+        private void MainModList_DragLeave(object sender, DragEventArgs e)
+        {
+            MessageBox.Show(sender.ToString(), e.ToString());
+        }
+
+        private void MainModList_DragEnter(object sender, DragEventArgs e)
+        {
+            MessageBox.Show(sender.ToString(), e.ToString());
         }
 
         private void SetVersion()
@@ -82,20 +92,47 @@ namespace ModSorter
                 }
                 else
                 {
-                    foreach (var item in XmlFileReaderUtility.GetModNamesFromFiles(workShopFolder))
+                    foreach (var mod in XmlFileReaderUtility.GetModNamesFromFiles(workShopFolder))
                     {
-                        allMods.Add(item);
-                        if (activeMods.Contains(item.folderName))
+                        allMods.Add(mod);
+                        CheckBox toggleMod = CreateCheckBox(mod);
+
+                        if (activeMods.Contains(mod.folderName))
                         {
-                            var pos = mainModList.Items.IndexOf(item.folderName);
-                            mainModList.Items.Insert(pos, item.name);
-                            mainModList.Items.Remove(item.folderName);
+                            mod.active = true;
+                            toggleMod.IsChecked = true;
+
+                            var pos = mainModList.Items.IndexOf(mod.folderName);
+                            mainModList.Items.Insert(pos, toggleMod);
+                            mainModList.Items.Remove(mod.folderName);
                         }
                         else
-                            mainModList.Items.Add(item.name);
+                            mainModList.Items.Add(toggleMod);
                     }
                 }
             }
+        }
+
+        private CheckBox CreateCheckBox(Mod mod)
+        {
+            CheckBox toggleMod = new CheckBox
+            {
+                Content = mod
+            };
+            toggleMod.Click += ToggleMod_Click;
+            return toggleMod;
+        }
+
+        private void ToggleMod_Click(object sender, RoutedEventArgs e)
+        {
+            var checkbox = (CheckBox)sender;
+            ToggleModActive(checkbox.Content, checkbox.IsChecked);
+        }
+
+        private void ToggleModActive(object mod, bool? active)
+        {
+            Mod toToggle = (Mod)mod;
+            toToggle.active = active ?? false;
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -120,9 +157,21 @@ namespace ModSorter
             if (pos == 0)
                 return;
 
-            mainModList.Items.Insert(mainModList.SelectedIndex - 1, item);
+            CheckBox freshBox = DeCoupleModFromOldCheckBox(item);
+
+            mainModList.Items.Insert(mainModList.SelectedIndex - 1, freshBox);
             mainModList.Items.RemoveAt(pos + 1);
             mainModList.SelectedItem = mainModList.Items.GetItemAt(pos - 1);
+        }
+
+        private CheckBox DeCoupleModFromOldCheckBox(object item)
+        {
+            CheckBox box = (CheckBox)item;
+            Mod mod = (Mod)box.Content;
+            box.Content = null;
+
+            CheckBox freshBox = CreateCheckBox(mod);
+            return freshBox;
         }
 
         private void MoveDownClicked(object sender, RoutedEventArgs e)
@@ -135,7 +184,9 @@ namespace ModSorter
             if (pos == mainModList.Items.Count - 1)
                 return;
 
-            mainModList.Items.Insert(mainModList.SelectedIndex + 2, item);
+            CheckBox freshBox = DeCoupleModFromOldCheckBox(item);
+
+            mainModList.Items.Insert(mainModList.SelectedIndex + 2, freshBox);
             mainModList.Items.RemoveAt(pos);
             mainModList.SelectedItem = mainModList.Items.GetItemAt(pos + 1);
         }

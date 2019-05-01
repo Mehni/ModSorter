@@ -11,6 +11,7 @@ namespace ModSorter
         public readonly List<Version> supportedVersions;
         public readonly string name;
         public readonly string folderName;
+        public bool active;
 
         public Mod(string name, string versionString, string folder)
         {
@@ -36,6 +37,8 @@ namespace ModSorter
                 }
             }
         }
+
+        public override string ToString() => name;
 
         public static bool TryParseVersionString(string str, out Version version)
         {
