@@ -29,6 +29,14 @@ namespace ModSorter
             return XElement.Load(file);
         }
 
+        public static Version GetGameVersion()
+        {
+            if (Mod.TryParseVersionString(GetModsConfig().Element("version").Value, out Version ver))
+                return ver;
+
+            return default(Version);
+        }
+
         public static IEnumerable<string> ReadModsFromModsConfig()
         {
             try
@@ -48,17 +56,17 @@ namespace ModSorter
         {
             foreach (var item in Directory.GetDirectories(folder))
             {
+                string folderName = item.Split(Path.DirectorySeparatorChar).Last();
                 string About = item + Path.DirectorySeparatorChar + "About";
                 if (!Directory.Exists(About))
                     continue;
 
                 var aboutxml = XElement.Load(About + Path.DirectorySeparatorChar + "About.xml");
 
-                string version = aboutxml?.Element("supportedVersions")?.Descendants()?.Select(x => x.Value).First()
-                              ?? aboutxml?.Element("targetVersion")?.Value;
-                yield return new Mod(aboutxml.Element("name").Value, version);
+                IEnumerable<XElement> version = aboutxml?.Element("supportedVersions")?.Descendants()
+                              ?? new List<XElement> { aboutxml?.Element("targetVersion") };
+                yield return new Mod(aboutxml.Element("name").Value, version, folderName);
             }
         }
-
     }
 }

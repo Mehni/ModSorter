@@ -21,14 +21,20 @@ namespace ModSorter
     public partial class MainWindow : Window
     {
         private XElement modConfig;
-        private List<Mod> activeMods;
-        private List<Mod> allMods;
+        private List<string> activeMods = new List<string>();
+        private List<Mod> allMods = new List<Mod>();
 
         public MainWindow()
         {
             InitializeComponent();
             modConfig = XmlFileReaderUtility.GetModsConfig();
             TryLoadFolder(textBox.Text);
+            SetVersion();
+        }
+
+        private void SetVersion()
+        {
+            version.Content = "RW version: " + XmlFileReaderUtility.GetGameVersion().ToString();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -63,65 +69,75 @@ namespace ModSorter
 
             foreach (var item in Directory.GetDirectories(path + Path.DirectorySeparatorChar + "Mods"))
             {
-                listBox.Items.Add(item);
+                mainModList.Items.Add(item);
             }
+
             if (path.ToUpper().Contains("STEAM"))
             {
                 string workShopFolder = XmlFileReaderUtility.GetWorkShopFolder(path);
 
-                if (Directory.Exists(workShopFolder))
+                if (!Directory.Exists(workShopFolder))
                 {
-                    foreach (var item in XmlFileReaderUtility.GetModNamesFromFiles(workShopFolder))
-                    {
-                        listBox.Items.Add(item.name);
-                    }
+                    MessageBox.Show("Thought there was a Steam workshop folder here, but can't find it.");
                 }
                 else
                 {
-                    MessageBox.Show("Thought there was a Steam workshop folder here, but can't find it.");
+                    foreach (var item in XmlFileReaderUtility.GetModNamesFromFiles(workShopFolder))
+                    {
+                        allMods.Add(item);
+                        if (activeMods.Contains(item.folderName))
+                        {
+                            var pos = mainModList.Items.IndexOf(item.folderName);
+                            mainModList.Items.Insert(pos, item.name);
+                            mainModList.Items.Remove(item.folderName);
+                        }
+                        else
+                            mainModList.Items.Add(item.name);
+                    }
                 }
             }
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            listBox.Items.Clear();
+            mainModList.Items.Clear();
             foreach (string item in XmlFileReaderUtility.ReadModsFromModsConfig())
             {
-                listBox.Items.Add(item);
+                activeMods.Add(item);
+                mainModList.Items.Add(item);
             }
-            if (listBox.Items.Count == 0)
-                listBox.Items.Add("No mods found");
+            if (mainModList.Items.Count == 0)
+                mainModList.Items.Add("No mods found");
         }
 
         private void MoveUpClicked(object sender, RoutedEventArgs e)
         {
-            object item = listBox.SelectedItem;
+            object item = mainModList.SelectedItem;
             if (item == null)
                 return;
 
-            int pos = listBox.Items.IndexOf(item);
+            int pos = mainModList.Items.IndexOf(item);
             if (pos == 0)
                 return;
 
-            listBox.Items.Insert(listBox.SelectedIndex - 1, item);
-            listBox.Items.RemoveAt(pos + 1);
-            listBox.SelectedItem = listBox.Items.GetItemAt(pos - 1);
+            mainModList.Items.Insert(mainModList.SelectedIndex - 1, item);
+            mainModList.Items.RemoveAt(pos + 1);
+            mainModList.SelectedItem = mainModList.Items.GetItemAt(pos - 1);
         }
 
         private void MoveDownClicked(object sender, RoutedEventArgs e)
         {
-            object item = listBox.SelectedItem;
+            object item = mainModList.SelectedItem;
             if (item == null)
                 return;
 
-            int pos = listBox.Items.IndexOf(item);
-            if (pos == listBox.Items.Count - 1)
+            int pos = mainModList.Items.IndexOf(item);
+            if (pos == mainModList.Items.Count - 1)
                 return;
 
-            listBox.Items.Insert(listBox.SelectedIndex + 2, item);
-            listBox.Items.RemoveAt(pos);
-            listBox.SelectedItem = listBox.Items.GetItemAt(pos + 1);
+            mainModList.Items.Insert(mainModList.SelectedIndex + 2, item);
+            mainModList.Items.RemoveAt(pos);
+            mainModList.SelectedItem = mainModList.Items.GetItemAt(pos + 1);
         }
     }
 }
