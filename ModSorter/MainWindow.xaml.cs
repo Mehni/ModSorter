@@ -24,22 +24,16 @@ namespace ModSorter
         private List<string> activeMods = new List<string>();
         private List<Mod> allMods = new List<Mod>();
 
+        private List<string> backedUpActiveMods;
+        private List<Mod> backedUpAllMods;
+        private List<object> backedUpView;
+
         public MainWindow()
         {
             InitializeComponent();
             modConfig = XmlFileReaderUtility.GetModsConfig();
             TryLoadFolder(@"D:\SteamLibrary\steamapps\common\RimWorld");
             SetVersion();
-        }
-
-        private void MainModList_DragLeave(object sender, DragEventArgs e)
-        {
-            MessageBox.Show(sender.ToString(), e.ToString());
-        }
-
-        private void MainModList_DragEnter(object sender, DragEventArgs e)
-        {
-            MessageBox.Show(sender.ToString(), e.ToString());
         }
 
         private void SetVersion()
@@ -74,12 +68,15 @@ namespace ModSorter
 
         private void TryLoadFolder(string path)
         {
+            if (string.IsNullOrEmpty(path))
+                return;
+
             if (!Directory.Exists(path))
                 return;
 
-            foreach (var item in Directory.GetDirectories(path + Path.DirectorySeparatorChar + "Mods"))
+            foreach (Mod item in XmlFileReaderUtility.GetModNamesFromFiles(path + Path.DirectorySeparatorChar + "Mods"))
             {
-                mainModList.Items.Add(item);
+                AddModToLists(item);
             }
 
             if (path.ToUpper().Contains("STEAM"))
@@ -92,25 +89,37 @@ namespace ModSorter
                 }
                 else
                 {
-                    foreach (var mod in XmlFileReaderUtility.GetModNamesFromFiles(workShopFolder))
+                    foreach (Mod mod in XmlFileReaderUtility.GetModNamesFromFiles(workShopFolder))
                     {
-                        allMods.Add(mod);
-                        CheckBox toggleMod = CreateCheckBox(mod);
-
-                        if (activeMods.Contains(mod.folderName))
-                        {
-                            mod.active = true;
-                            toggleMod.IsChecked = true;
-
-                            var pos = mainModList.Items.IndexOf(mod.folderName);
-                            mainModList.Items.Insert(pos, toggleMod);
-                            mainModList.Items.Remove(mod.folderName);
-                        }
-                        else
-                            mainModList.Items.Add(toggleMod);
+                        AddModToLists(mod);
                     }
                 }
             }
+            backedUpActiveMods = new List<string>(activeMods);
+            backedUpAllMods = new List<Mod>(allMods);
+            backedUpView = new List<object>(mainModList.Items.Count);
+            for (int i = 0; i < mainModList.Items.Count; i++)
+            {
+                backedUpView.Add(mainModList.Items[i]);
+            }
+        }
+
+        private void AddModToLists(Mod mod)
+        {
+            allMods.Add(mod);
+            CheckBox toggleMod = CreateCheckBox(mod);
+
+            if (activeMods.Contains(mod.folderName))
+            {
+                mod.active = true;
+                toggleMod.IsChecked = true;
+
+                int pos = mainModList.Items.IndexOf(mod.folderName);
+                mainModList.Items.Insert(pos, toggleMod);
+                mainModList.Items.Remove(mod.folderName);
+            }
+            else
+                mainModList.Items.Add(toggleMod);
         }
 
         private CheckBox CreateCheckBox(Mod mod)
@@ -125,14 +134,22 @@ namespace ModSorter
 
         private void ToggleMod_Click(object sender, RoutedEventArgs e)
         {
-            var checkbox = (CheckBox)sender;
-            ToggleModActive(checkbox.Content, checkbox.IsChecked);
-        }
+            CheckBox checkbox = (CheckBox)sender;
+            Mod toToggle = (Mod)checkbox.Content;
+            toToggle.active = checkbox.IsChecked ?? false;
 
-        private void ToggleModActive(object mod, bool? active)
-        {
-            Mod toToggle = (Mod)mod;
-            toToggle.active = active ?? false;
+            CheckBox freshBox = DeCoupleModFromOldCheckBox(sender);
+            mainModList.Items.Insert(activeMods.Count, freshBox);
+            mainModList.Items.Remove(checkbox);
+
+            if (toToggle.active)
+            {
+                activeMods.Add(toToggle.folderName);
+            }
+            else
+            {
+                activeMods.Remove(toToggle.folderName);
+            }
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -154,24 +171,25 @@ namespace ModSorter
                 return;
 
             int pos = mainModList.Items.IndexOf(item);
+
             if (pos == 0)
                 return;
+
+            CheckBox box = (CheckBox)item;
+            Mod mod = (Mod)box.Content;
+
+            if (pos <= activeMods.Count && !activeMods.Contains(mod.folderName))
+            {
+                box.IsChecked = true;
+                mod.active = true;
+                activeMods.Add(mod.folderName);
+            }
 
             CheckBox freshBox = DeCoupleModFromOldCheckBox(item);
 
             mainModList.Items.Insert(mainModList.SelectedIndex - 1, freshBox);
             mainModList.Items.RemoveAt(pos + 1);
             mainModList.SelectedItem = mainModList.Items.GetItemAt(pos - 1);
-        }
-
-        private CheckBox DeCoupleModFromOldCheckBox(object item)
-        {
-            CheckBox box = (CheckBox)item;
-            Mod mod = (Mod)box.Content;
-            box.Content = null;
-
-            CheckBox freshBox = CreateCheckBox(mod);
-            return freshBox;
         }
 
         private void MoveDownClicked(object sender, RoutedEventArgs e)
@@ -181,14 +199,55 @@ namespace ModSorter
                 return;
 
             int pos = mainModList.Items.IndexOf(item);
-            if (pos == mainModList.Items.Count - 1)
+
+            if (pos > activeMods.Count || pos >= mainModList.Items.Count)
                 return;
+
+            if (pos >= activeMods.Count - 1)
+            {
+                CheckBox box = (CheckBox)item;
+                Mod mod = (Mod)box.Content;
+                box.IsChecked = false;
+                mod.active = false;
+                activeMods.Remove(mod.folderName);
+                return;
+            }
 
             CheckBox freshBox = DeCoupleModFromOldCheckBox(item);
 
             mainModList.Items.Insert(mainModList.SelectedIndex + 2, freshBox);
             mainModList.Items.RemoveAt(pos);
             mainModList.SelectedItem = mainModList.Items.GetItemAt(pos + 1);
+        }
+
+        private CheckBox DeCoupleModFromOldCheckBox(object item)
+        {
+            CheckBox box = (CheckBox)item;
+            Mod mod = (Mod)box.Content;
+            box.Content = null;
+
+            CheckBox freshBox = CreateCheckBox(mod);
+            freshBox.IsChecked = box.IsChecked;
+
+            int pos = backedUpView.IndexOf(item);
+            backedUpView.Remove(item);
+            backedUpView.Insert(pos, freshBox);
+
+            return freshBox;
+        }
+
+        private void Reset(object sender, RoutedEventArgs e)
+        {
+            allMods = new List<Mod>(backedUpAllMods);
+            activeMods = new List<string>(backedUpActiveMods);
+            mainModList.Items.Clear();
+            foreach (var item in backedUpView)
+            {
+                CheckBox box = (CheckBox)item;
+                Mod mod = (Mod)box.Content;
+                box.IsChecked = activeMods.Contains(mod.folderName);
+                mainModList.Items.Add(item);
+            }
         }
     }
 }

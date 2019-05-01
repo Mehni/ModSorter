@@ -8,7 +8,7 @@
 
         Title="ModSorter by Mehni" Height="600" Width="800">
     <Grid Name ="MainGrid">
-        <ListBox Name ="mainModList" HorizontalAlignment="Left" Margin="10, 80, 0, 0" Width="500" Height="280" VerticalAlignment="Top">
+        <ListBox Name ="mainModList" HorizontalAlignment="Left" Margin="10, 80, 0, 0" Width="500" Height="470" VerticalAlignment="Top">
             <ListBoxItem>No mods found</ListBoxItem>
         </ListBox>
         <!-- C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64.exe -->
@@ -16,6 +16,7 @@
         <Button Content="open folder" HorizontalAlignment="Left" Height="40" Margin="402.809,20,0,0" VerticalAlignment="Top" Width="93.587" Click="Button_Click" />
         <Button Content="Move up" HorizontalAlignment="Left" Margin="515,133,0,0" VerticalAlignment="Top" Width="75" Click="MoveUpClicked"/>
         <Button Content="Move down" HorizontalAlignment="Left" Margin="515,158,0,0" VerticalAlignment="Top" Width="75" Click="MoveDownClicked"/>
-        <Label x:Name="version" HorizontalAlignment="Right" Margin="0,20,10,0" Width="105" Height="23" VerticalAlignment="Top" Content="version not found" HorizontalContentAlignment="Right" />
+        <Button Content="Reset" HorizontalAlignment="Left" Margin="696,530,0,0" VerticalAlignment="Top" Width="75" Click="Reset" />
+        <Label Name="version" HorizontalAlignment="Right" Margin="0,20,10,0" Width="105" Height="23" VerticalAlignment="Top" Content="version not found" HorizontalContentAlignment="Right" />
     </Grid>
 </Window>

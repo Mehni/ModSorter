@@ -38,7 +38,12 @@ namespace ModSorter
             }
         }
 
-        public override string ToString() => name;
+        public override string ToString() => $"[{MaxSupportedVersion?.Major}.{MaxSupportedVersion?.Minor}] {name}";
+
+        private Version MaxSupportedVersion
+            => supportedVersions.Any(x => x == XmlFileReaderUtility.GetGameVersion())
+                ? supportedVersions.FirstOrDefault(x => x == XmlFileReaderUtility.GetGameVersion())
+                : supportedVersions.OrderByDescending(x => x?.Major)?.ThenBy(x => x?.Minor).FirstOrDefault();
 
         public static bool TryParseVersionString(string str, out Version version)
         {

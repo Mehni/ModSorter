@@ -34,7 +34,7 @@ namespace ModSorter
             if (Mod.TryParseVersionString(GetModsConfig().Element("version").Value, out Version ver))
                 return ver;
 
-            return default(Version);
+            return new Version("unknown");
         }
 
         public static IEnumerable<string> ReadModsFromModsConfig()
