@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
@@ -10,40 +11,56 @@ namespace ModSorter
     {
         public readonly List<Version> supportedVersions;
         public readonly string name;
-        public readonly string folderName;
+        public readonly string folder;
         public bool active;
-
-        public Mod(string name, string versionString, string folder)
-        {
-            this.name = name;
-            this.folderName = folder;
-            if (TryParseVersionString(versionString, out var version))
-            {
-                this.supportedVersions = new List<Version> { version };
-            }
-        }
 
         public Mod(string name, IEnumerable<XElement> versions, string folder)
         {
             this.name = name;
-            this.folderName = folder;
-            this.supportedVersions = new List<Version>();
+            this.folder = folder.Split(Path.DirectorySeparatorChar).Last();
 
-            foreach (var item in versions.Select(x => x?.Value))
+            supportedVersions = new List<Version>();
+
+            foreach (string item in versions.Select(x => x?.Value))
             {
-                if (TryParseVersionString(item, out var version))
+                if (TryParseVersionString(item, out Version version))
                 {
-                    this.supportedVersions.Add(version);
+                    supportedVersions.Add(version);
                 }
+            }
+
+            if (name == "Core" && this.folder == "Core")
+            {
+                supportedVersions.Add(ExtractVersionFromCore(folder));
             }
         }
 
-        public override string ToString() => $"[{MaxSupportedVersion?.Major}.{MaxSupportedVersion?.Minor}] {name}";
+        private Version ExtractVersionFromCore(string folder)
+        {
+            //if install directory is D:\SteamLibrary\steamapps\common\RimWorld\Mods\Core
+            //then version file is in D:\SteamLibrary\steamapps\common\RimWorld\Version.txt
+            DirectoryInfo Mods = Directory.GetParent(folder);
+            DirectoryInfo RimWorld = Mods.Parent;
+            string text = "0, 1";
+            if (File.Exists(RimWorld.FullName + Path.DirectorySeparatorChar + "Version.txt"))
+            {
+                text = File.ReadAllText(RimWorld.FullName + Path.DirectorySeparatorChar + "Version.txt");
+            }
+
+            TryParseVersionString(text, out Version version);
+            return version;
+        }
+
+        public bool IsCompatible()
+            => supportedVersions.Any(x => x == XmlFileReaderUtility.GetModsConfigVersion());
+
+        public override string ToString()
+            => $"[{MaxSupportedVersion.ToString()}] {name}";
 
         private Version MaxSupportedVersion
-            => supportedVersions.Any(x => x == XmlFileReaderUtility.GetGameVersion())
-                ? supportedVersions.FirstOrDefault(x => x == XmlFileReaderUtility.GetGameVersion())
-                : supportedVersions.OrderByDescending(x => x?.Major)?.ThenBy(x => x?.Minor).FirstOrDefault();
+            => supportedVersions.Any(x => x == XmlFileReaderUtility.GetModsConfigVersion())
+                ? supportedVersions.FirstOrDefault(x => x == XmlFileReaderUtility.GetModsConfigVersion())
+                : supportedVersions.OrderByDescending(x => x?.Major)?.ThenBy(x => x?.Minor).FirstOrDefault() ?? new Version(0,0);
 
         public static bool TryParseVersionString(string str, out Version version)
         {

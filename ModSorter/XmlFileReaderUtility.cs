@@ -9,32 +9,45 @@ namespace ModSorter
 {
     internal class XmlFileReaderUtility
     {
+        private const string filename = "ModsConfig.xml";
+        private static readonly string directory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low" + Path.DirectorySeparatorChar + GetFilePath();
+
         public static string GetWorkShopFolder(string installDirectory)
         {
             //if install directory is D:\SteamLibrary\steamapps\common\RimWorld
             //then workshop folder is D:\SteamLibrary\steamapps\workshop\content\294100
-            var common = Directory.GetParent(installDirectory);
-            var steamApps = common.Parent;
-            var workshop = steamApps.FullName + Path.DirectorySeparatorChar + "workshop";
-            var content = workshop + Path.DirectorySeparatorChar + "content";
-            var mods = content + Path.DirectorySeparatorChar + "294100";
+            DirectoryInfo common = Directory.GetParent(installDirectory);
+            DirectoryInfo steamApps = common.Parent;
+            string workshop = steamApps.FullName + Path.DirectorySeparatorChar + "workshop";
+            string content = workshop + Path.DirectorySeparatorChar + "content";
+            string mods = content + Path.DirectorySeparatorChar + "294100";
             return mods;
+        }
+
+        public static void WriteModsToConfig(IEnumerable<string> mods, XElement modsConfig)
+        {
+            modsConfig.Element("activeMods").RemoveAll();
+
+            foreach (string item in mods)
+            {
+                modsConfig.Element("activeMods").Add(new XElement("li", item));
+            }
+            string file = Path.Combine(directory, filename);
+            modsConfig.Save(file);
         }
 
         public static XElement GetModsConfig()
         {
-            string filename = "ModsConfig.xml";
-            string directory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low" + Path.DirectorySeparatorChar + GetFilePath();
             string file = Path.Combine(directory, filename);
             return XElement.Load(file);
         }
 
-        public static Version GetGameVersion()
+        public static Version GetModsConfigVersion()
         {
             if (Mod.TryParseVersionString(GetModsConfig().Element("version").Value, out Version ver))
                 return ver;
 
-            return new Version("unknown");
+            return new Version(0, 0);
         }
 
         public static IEnumerable<string> ReadModsFromModsConfig()
@@ -54,18 +67,17 @@ namespace ModSorter
 
         public static IEnumerable<Mod> GetModNamesFromFiles(string folder)
         {
-            foreach (var item in Directory.GetDirectories(folder))
+            foreach (string subFolder in Directory.GetDirectories(folder))
             {
-                string folderName = item.Split(Path.DirectorySeparatorChar).Last();
-                string About = item + Path.DirectorySeparatorChar + "About";
+                string About = subFolder + Path.DirectorySeparatorChar + "About";
                 if (!Directory.Exists(About))
                     continue;
 
-                var aboutxml = XElement.Load(About + Path.DirectorySeparatorChar + "About.xml");
+                XElement aboutxml = XElement.Load(About + Path.DirectorySeparatorChar + "About.xml");
 
                 IEnumerable<XElement> version = aboutxml?.Element("supportedVersions")?.Descendants()
                               ?? new List<XElement> { aboutxml?.Element("targetVersion") };
-                yield return new Mod(aboutxml.Element("name").Value, version, folderName);
+                yield return new Mod(aboutxml.Element("name").Value, version, subFolder);
             }
         }
     }

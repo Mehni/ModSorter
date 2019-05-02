@@ -1,17 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace ModSorter
 {
@@ -20,7 +13,7 @@ namespace ModSorter
     /// </summary>
     public partial class MainWindow : Window
     {
-        private XElement modConfig;
+        private readonly XElement modConfig;
         private List<string> activeMods = new List<string>();
         private List<Mod> allMods = new List<Mod>();
 
@@ -32,32 +25,36 @@ namespace ModSorter
         {
             InitializeComponent();
             modConfig = XmlFileReaderUtility.GetModsConfig();
-            TryLoadFolder(@"D:\SteamLibrary\steamapps\common\RimWorld");
+            PopulateMainModList();
             SetVersion();
+            OpenFileSelectDialog();
         }
 
         private void SetVersion()
         {
-            version.Content = "RW version: " + XmlFileReaderUtility.GetGameVersion().ToString();
+            version.Content = "RW config version: " + XmlFileReaderUtility.GetModsConfigVersion();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void OpenFileSelectDialog()
         {
             try
             {
-                if (!Directory.Exists(textBox.Text))
-                    textBox.Text = string.Empty;
+                if (!Directory.Exists(textBox.Content.ToString()))
+                    textBox.Content = string.Empty;
 
                 Ookii.Dialogs.Wpf.VistaOpenFileDialog dialog = new Ookii.Dialogs.Wpf.VistaOpenFileDialog
                 {
                     Filter = "RimWorld.exe (*.exe)|*.exe",
-                    InitialDirectory = textBox.Text
+                    InitialDirectory = textBox.Content.ToString()
                 };
-                if ((bool)dialog.ShowDialog())
+                if (dialog.ShowDialog() == true)
                 {
-                    textBox.Text = dialog.FileName;
-                    TextBox_TextChanged(this, null);
+                    textBox.Content = dialog.FileName;
                     TryLoadFolder(Path.GetDirectoryName(dialog.FileName));
+                }
+                else
+                {
+                    Application.Current.Shutdown();
                 }
             }
             catch (Exception ex)
@@ -98,9 +95,9 @@ namespace ModSorter
             backedUpActiveMods = new List<string>(activeMods);
             backedUpAllMods = new List<Mod>(allMods);
             backedUpView = new List<object>(mainModList.Items.Count);
-            for (int i = 0; i < mainModList.Items.Count; i++)
+            foreach (object checkBox in mainModList.Items)
             {
-                backedUpView.Add(mainModList.Items[i]);
+                backedUpView.Add(checkBox);
             }
         }
 
@@ -109,14 +106,14 @@ namespace ModSorter
             allMods.Add(mod);
             CheckBox toggleMod = CreateCheckBox(mod);
 
-            if (activeMods.Contains(mod.folderName))
+            if (activeMods.Contains(mod.folder))
             {
                 mod.active = true;
                 toggleMod.IsChecked = true;
 
-                int pos = mainModList.Items.IndexOf(mod.folderName);
+                int pos = mainModList.Items.IndexOf(mod.folder);
                 mainModList.Items.Insert(pos, toggleMod);
-                mainModList.Items.Remove(mod.folderName);
+                mainModList.Items.Remove(mod.folder);
             }
             else
                 mainModList.Items.Add(toggleMod);
@@ -129,6 +126,7 @@ namespace ModSorter
                 Content = mod
             };
             toggleMod.Click += ToggleMod_Click;
+            toggleMod.Background = mod.IsCompatible() ? default : System.Windows.Media.Brushes.Gainsboro;
             return toggleMod;
         }
 
@@ -144,15 +142,15 @@ namespace ModSorter
 
             if (toToggle.active)
             {
-                activeMods.Add(toToggle.folderName);
+                activeMods.Add(toToggle.folder);
             }
             else
             {
-                activeMods.Remove(toToggle.folderName);
+                activeMods.Remove(toToggle.folder);
             }
         }
 
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void PopulateMainModList()
         {
             mainModList.Items.Clear();
             foreach (string item in XmlFileReaderUtility.ReadModsFromModsConfig())
@@ -178,11 +176,11 @@ namespace ModSorter
             CheckBox box = (CheckBox)item;
             Mod mod = (Mod)box.Content;
 
-            if (pos <= activeMods.Count && !activeMods.Contains(mod.folderName))
+            if (pos <= activeMods.Count && !activeMods.Contains(mod.folder))
             {
                 box.IsChecked = true;
                 mod.active = true;
-                activeMods.Add(mod.folderName);
+                activeMods.Add(mod.folder);
             }
 
             CheckBox freshBox = DeCoupleModFromOldCheckBox(item);
@@ -209,7 +207,7 @@ namespace ModSorter
                 Mod mod = (Mod)box.Content;
                 box.IsChecked = false;
                 mod.active = false;
-                activeMods.Remove(mod.folderName);
+                activeMods.Remove(mod.folder);
                 return;
             }
 
@@ -241,13 +239,36 @@ namespace ModSorter
             allMods = new List<Mod>(backedUpAllMods);
             activeMods = new List<string>(backedUpActiveMods);
             mainModList.Items.Clear();
-            foreach (var item in backedUpView)
+            foreach (object item in backedUpView)
             {
                 CheckBox box = (CheckBox)item;
                 Mod mod = (Mod)box.Content;
-                box.IsChecked = activeMods.Contains(mod.folderName);
+                box.IsChecked = activeMods.Contains(mod.folder);
                 mainModList.Items.Add(item);
             }
+        }
+
+        private void Save(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                XmlFileReaderUtility.WriteModsToConfig(activeMods, modConfig);
+                MessageBox.Show("File saved succesfully.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private void BuyMeACoffee(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://ko-fi.com/mehnicreates");
+        }
+
+        private void HelpClick(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("If you need help, ask a friend." + Environment.NewLine + Environment.NewLine + "If you want professional support, buy me a coffee first.", "There is no help here");
         }
     }
 }

@@ -5,18 +5,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ModSorter"
         mc:Ignorable="d"
-
         Title="ModSorter by Mehni" Height="600" Width="800">
     <Grid Name ="MainGrid">
-        <ListBox Name ="mainModList" HorizontalAlignment="Left" Margin="10, 80, 0, 0" Width="500" Height="470" VerticalAlignment="Top">
-            <ListBoxItem>No mods found</ListBoxItem>
+        <ListBox Name ="mainModList" HorizontalAlignment="Left" Margin="10, 80, 0, 0" Width="505" Height="470" VerticalAlignment="Top">
+            <ListBoxItem Background="Gainsboro">No mods found</ListBoxItem>
         </ListBox>
-        <!-- C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64.exe -->
-        <TextBox Name="textBox" Height="40" Margin="10,20,0,0" TextWrapping="Wrap" Text="D:\SteamLibrary\steamapps\common\RimWorld\RimWorldWin64.exe" VerticalAlignment="Top" HorizontalAlignment="Left" Width="387.809" TextChanged="TextBox_TextChanged"/>
-        <Button Content="open folder" HorizontalAlignment="Left" Height="40" Margin="402.809,20,0,0" VerticalAlignment="Top" Width="93.587" Click="Button_Click" />
-        <Button Content="Move up" HorizontalAlignment="Left" Margin="515,133,0,0" VerticalAlignment="Top" Width="75" Click="MoveUpClicked"/>
-        <Button Content="Move down" HorizontalAlignment="Left" Margin="515,158,0,0" VerticalAlignment="Top" Width="75" Click="MoveDownClicked"/>
+        <!-- D:\SteamLibrary\steamapps\common\RimWorld -->
+        <!-- C:\Program Files (x86)\Steam\steamapps\common\RimWorld -->
+        <Label Name="textBox" Height="40" Margin="10,20,0,0" Content="C:\Program Files (x86)\Steam\steamapps\common\RimWorld" VerticalAlignment="Top" HorizontalAlignment="Left" Width="662.413" />
+        <Button Content="Move up" HorizontalAlignment="Left" Margin="520,133,0,0" VerticalAlignment="Top" Width="75" Click="MoveUpClicked"/>
+        <Button Content="Move down" HorizontalAlignment="Left" Margin="520,158,0,0" VerticalAlignment="Top" Width="75" Click="MoveDownClicked"/>
         <Button Content="Reset" HorizontalAlignment="Left" Margin="696,530,0,0" VerticalAlignment="Top" Width="75" Click="Reset" />
-        <Label Name="version" HorizontalAlignment="Right" Margin="0,20,10,0" Width="105" Height="23" VerticalAlignment="Top" Content="version not found" HorizontalContentAlignment="Right" />
+        <Label Name="version" HorizontalAlignment="Left" Margin="515,80,0,0" Width="140" Height="29" VerticalAlignment="Top" Content="version not found" HorizontalContentAlignment="Left" />
+        <Button Content="Save" HorizontalAlignment="Left" Margin="616,530,0,0" VerticalAlignment="Top" Width="75" Click="Save"/>
+        <Image HorizontalAlignment="Left" Height="52" Margin="549,424,0,0" VerticalAlignment="Top" Width="200" Source="{DynamicResource kofi}" MouseDown="BuyMeACoffee">
+            <Image.Resources>
+                <BitmapImage x:Key="kofi" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="C:\Users\Mehni\Documents\GitHub\ModSorter\ModSorter\kofi.png"/>
+            </Image.Resources>
+        </Image>
+        <Label HorizontalAlignment="Left" Margin="590,367,0,0" VerticalAlignment="Top" Content="Did this help you?" />
+        <Label HorizontalAlignment="Left" Margin="535,393,0,0" VerticalAlignment="Top" Content="If so, please consider buying me a coffee." />
+        <Button Content="Help" HorizontalAlignment="Left" Margin="535,530,0,0" VerticalAlignment="Top" Width="75" Click="HelpClick" />
     </Grid>
 </Window>
