@@ -26,5 +26,6 @@
         <Label HorizontalAlignment="Left" Margin="590,367,0,0" VerticalAlignment="Top" Content="Did this help you?" />
         <Label HorizontalAlignment="Left" Margin="535,393,0,0" VerticalAlignment="Top" Content="If so, please consider buying me a coffee." />
         <Button Content="Help" HorizontalAlignment="Left" Margin="535,530,0,0" VerticalAlignment="Top" Width="75" Click="HelpClick" />
+        <TextBox Name="SearchField" HorizontalAlignment="Left" Height="23" Margin="10,57,0,0" TextWrapping="Wrap" Text="Search..." PreviewMouseDown="TextBox_MouseLeftButtonDown"  VerticalAlignment="Top" Width="120" TextChanged="TextBox_TextChanged"/>
     </Grid>
 </Window>

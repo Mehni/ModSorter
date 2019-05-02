@@ -88,5 +88,20 @@ namespace ModSorter
             version = new Version(int.Parse(array[0]), int.Parse(array[1]));
             return true;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Mod == false)
+                return false;
+            return ((Mod)obj).name == name && folder == ((Mod)obj).folder;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return name.GetHashCode() ^ folder.GetHashCode();
+            }
+        }
     }
 }

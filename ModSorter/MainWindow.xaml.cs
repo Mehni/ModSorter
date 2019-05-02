@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Linq;
 using System.Xml.Linq;
 using System.Diagnostics;
 
@@ -19,7 +20,7 @@ namespace ModSorter
 
         private List<string> backedUpActiveMods;
         private List<Mod> backedUpAllMods;
-        private List<object> backedUpView;
+        private List<CheckBox> backedUpView;
 
         public MainWindow()
         {
@@ -94,8 +95,8 @@ namespace ModSorter
             }
             backedUpActiveMods = new List<string>(activeMods);
             backedUpAllMods = new List<Mod>(allMods);
-            backedUpView = new List<object>(mainModList.Items.Count);
-            foreach (object checkBox in mainModList.Items)
+            backedUpView = new List<CheckBox>(mainModList.Items.Count);
+            foreach (CheckBox checkBox in mainModList.Items.Cast<CheckBox>())
             {
                 backedUpView.Add(checkBox);
             }
@@ -123,7 +124,8 @@ namespace ModSorter
         {
             CheckBox toggleMod = new CheckBox
             {
-                Content = mod
+                Content = mod,
+                IsChecked = mod.active,
             };
             toggleMod.Click += ToggleMod_Click;
             toggleMod.Background = mod.IsCompatible() ? default : System.Windows.Media.Brushes.Gainsboro;
@@ -132,12 +134,13 @@ namespace ModSorter
 
         private void ToggleMod_Click(object sender, RoutedEventArgs e)
         {
+
             CheckBox checkbox = (CheckBox)sender;
             Mod toToggle = (Mod)checkbox.Content;
             toToggle.active = checkbox.IsChecked ?? false;
 
             CheckBox freshBox = DeCoupleModFromOldCheckBox(sender);
-            mainModList.Items.Insert(activeMods.Count, freshBox);
+            mainModList.Items.Insert(Math.Min(activeMods.Count, mainModList.Items.Count), freshBox);
             mainModList.Items.Remove(checkbox);
 
             if (toToggle.active)
@@ -186,7 +189,7 @@ namespace ModSorter
             CheckBox freshBox = DeCoupleModFromOldCheckBox(item);
 
             mainModList.Items.Insert(mainModList.SelectedIndex - 1, freshBox);
-            mainModList.Items.RemoveAt(pos + 1);
+            mainModList.Items.Remove(item);
             mainModList.SelectedItem = mainModList.Items.GetItemAt(pos - 1);
         }
 
@@ -214,7 +217,7 @@ namespace ModSorter
             CheckBox freshBox = DeCoupleModFromOldCheckBox(item);
 
             mainModList.Items.Insert(mainModList.SelectedIndex + 2, freshBox);
-            mainModList.Items.RemoveAt(pos);
+            mainModList.Items.Remove(item);
             mainModList.SelectedItem = mainModList.Items.GetItemAt(pos + 1);
         }
 
@@ -225,10 +228,20 @@ namespace ModSorter
             box.Content = null;
 
             CheckBox freshBox = CreateCheckBox(mod);
-            freshBox.IsChecked = box.IsChecked;
 
-            int pos = backedUpView.IndexOf(item);
-            backedUpView.Remove(item);
+            if (backedUpView.Contains(box))
+            {
+                int oldPos = backedUpView.IndexOf(box);
+                backedUpView.Remove(box);
+                backedUpView.Insert(oldPos, freshBox);
+
+                return freshBox;
+            }
+
+            CheckBox oldCheckBox = backedUpView.First(x => ((Mod)x.Content) == mod);
+
+            int pos = backedUpView.IndexOf(oldCheckBox);
+            backedUpView.Remove(oldCheckBox);
             backedUpView.Insert(pos, freshBox);
 
             return freshBox;
@@ -268,7 +281,52 @@ namespace ModSorter
 
         private void HelpClick(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("If you need help, ask a friend." + Environment.NewLine + Environment.NewLine + "If you want professional support, buy me a coffee first.", "There is no help here");
+            MessageBox.Show(
+                "If you need help, ask a friend." + Environment.NewLine
+                + Environment.NewLine
+                + "If you want professional support, buy me a coffee first." + Environment.NewLine
+                + Environment.NewLine
+                + "Known issues:" + Environment.NewLine
+                + "- Activating mods through search is kinda weird, but works." + Environment.NewLine
+
+                , caption: "There is no help here");
+        }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox thing = (TextBox)sender;
+            if (thing.Text == "Search...")
+                return;
+            ResortModList(thing.Text);
+        }
+
+        private void TextBox_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            SearchField.Text = "";
+            ResortModList(SearchField.Text);
+        }
+
+        private void ResortModList(string filter)
+        {
+            filter = filter.ToUpper();
+            mainModList.Items.Clear();
+            foreach (var activeMod in activeMods)
+            {
+                Mod toAdd = allMods.Find(x => x.active && x.folder == activeMod);
+                if (toAdd.name.ToUpper().Contains(filter))
+                {
+                    var box = CreateCheckBox(toAdd);
+                    mainModList.Items.Add(box);
+                }
+            }
+            foreach (var inactiveMod in allMods)
+            {
+                if (!inactiveMod.active && inactiveMod.name.ToUpper().Contains(filter))
+                {
+                    var box = CreateCheckBox(inactiveMod);
+                    mainModList.Items.Add(box);
+                }
+            }
         }
     }
 }
