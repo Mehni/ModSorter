@@ -20,7 +20,7 @@
         <Button Content="Save" HorizontalAlignment="Left" Margin="616,530,0,0" VerticalAlignment="Top" Width="75" Click="Save"/>
         <Image HorizontalAlignment="Left" Height="52" Margin="549,424,0,0" VerticalAlignment="Top" Width="200" Source="{DynamicResource kofi}" MouseDown="BuyMeACoffee">
             <Image.Resources>
-                <BitmapImage x:Key="kofi" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="C:\Users\Mehni\Documents\GitHub\ModSorter\ModSorter\kofi.png"/>
+                <BitmapImage x:Key="kofi" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="C:\Users\Maniak\Documents\GitHub\ModSorter\ModSorter\kofi.png"/>
             </Image.Resources>
         </Image>
         <Label HorizontalAlignment="Left" Margin="590,367,0,0" VerticalAlignment="Top" Content="Did this help you?" />

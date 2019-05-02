@@ -134,7 +134,6 @@ namespace ModSorter
 
         private void ToggleMod_Click(object sender, RoutedEventArgs e)
         {
-
             CheckBox checkbox = (CheckBox)sender;
             Mod toToggle = (Mod)checkbox.Content;
             toToggle.active = checkbox.IsChecked ?? false;
@@ -151,6 +150,9 @@ namespace ModSorter
             {
                 activeMods.Remove(toToggle.folder);
             }
+
+            if (!string.IsNullOrWhiteSpace(SearchField.Text) && SearchField.Text != "Search...")
+                ResortModList(SearchField.Text);
         }
 
         private void PopulateMainModList()
@@ -179,11 +181,20 @@ namespace ModSorter
             CheckBox box = (CheckBox)item;
             Mod mod = (Mod)box.Content;
 
-            if (pos <= activeMods.Count && !activeMods.Contains(mod.folder))
+            if (pos <= activeMods.Count)
             {
                 box.IsChecked = true;
                 mod.active = true;
-                activeMods.Add(mod.folder);
+
+                if (activeMods.Contains(mod.folder))
+                {
+                    activeMods.Remove(mod.folder);
+                    activeMods.Insert(pos - 1, mod.folder);
+                }
+                else
+                {
+                    activeMods.Add(mod.folder);
+                }
             }
 
             CheckBox freshBox = DeCoupleModFromOldCheckBox(item);
@@ -191,6 +202,9 @@ namespace ModSorter
             mainModList.Items.Insert(mainModList.SelectedIndex - 1, freshBox);
             mainModList.Items.Remove(item);
             mainModList.SelectedItem = mainModList.Items.GetItemAt(pos - 1);
+
+            if (!string.IsNullOrWhiteSpace(SearchField.Text) && SearchField.Text != "Search...")
+                ResortModList(SearchField.Text);
         }
 
         private void MoveDownClicked(object sender, RoutedEventArgs e)
@@ -219,6 +233,9 @@ namespace ModSorter
             mainModList.Items.Insert(mainModList.SelectedIndex + 2, freshBox);
             mainModList.Items.Remove(item);
             mainModList.SelectedItem = mainModList.Items.GetItemAt(pos + 1);
+
+            if (!string.IsNullOrWhiteSpace(SearchField.Text) && SearchField.Text != "Search...")
+                ResortModList(SearchField.Text);
         }
 
         private CheckBox DeCoupleModFromOldCheckBox(object item)
@@ -238,7 +255,7 @@ namespace ModSorter
                 return freshBox;
             }
 
-            CheckBox oldCheckBox = backedUpView.First(x => ((Mod)x.Content) == mod);
+            CheckBox oldCheckBox = backedUpView.First(x => Equals((Mod)x.Content, mod));
 
             int pos = backedUpView.IndexOf(oldCheckBox);
             backedUpView.Remove(oldCheckBox);
@@ -252,12 +269,11 @@ namespace ModSorter
             allMods = new List<Mod>(backedUpAllMods);
             activeMods = new List<string>(backedUpActiveMods);
             mainModList.Items.Clear();
-            foreach (object item in backedUpView)
+            foreach (CheckBox box in backedUpView)
             {
-                CheckBox box = (CheckBox)item;
                 Mod mod = (Mod)box.Content;
                 box.IsChecked = activeMods.Contains(mod.folder);
-                mainModList.Items.Add(item);
+                mainModList.Items.Add(box);
             }
         }
 
@@ -287,7 +303,7 @@ namespace ModSorter
                 + "If you want professional support, buy me a coffee first." + Environment.NewLine
                 + Environment.NewLine
                 + "Known issues:" + Environment.NewLine
-                + "- Activating mods through search is kinda weird, but works." + Environment.NewLine
+                + "- None currently. Found any? Submit a PR!" + Environment.NewLine
 
                 , caption: "There is no help here");
         }
@@ -297,6 +313,7 @@ namespace ModSorter
             TextBox thing = (TextBox)sender;
             if (thing.Text == "Search...")
                 return;
+
             ResortModList(thing.Text);
         }
 
