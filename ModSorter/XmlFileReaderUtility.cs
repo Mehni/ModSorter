@@ -95,7 +95,7 @@ namespace ModSorter
                 }
                 catch (System.Xml.XmlException ex)
                 {
-                    MessageBox.Show($"Error reading {aboutXmlFile}: {ex.ToString()}");
+                    MessageBox.Show($"Could not add mod in {subFolder}. {Environment.NewLine + Environment.NewLine} Error reading {aboutXmlFile}: {ex.ToString()}", "Mod not added.");
                     continue;
                 }
 

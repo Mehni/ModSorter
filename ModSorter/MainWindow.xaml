@@ -16,7 +16,7 @@
         <Button Content="Move up" HorizontalAlignment="Left" Margin="520,133,0,0" VerticalAlignment="Top" Width="75" Click="MoveUpClicked"/>
         <Button Content="Move down" HorizontalAlignment="Left" Margin="520,158,0,0" VerticalAlignment="Top" Width="75" Click="MoveDownClicked"/>
         <Button Content="Reset" HorizontalAlignment="Left" Margin="696,530,0,0" VerticalAlignment="Top" Width="75" Click="Reset" />
-        <Label Name="version" HorizontalAlignment="Left" Margin="515,80,0,0" Width="140" Height="29" VerticalAlignment="Top" Content="version not found" HorizontalContentAlignment="Left" />
+        <Label Name="version" HorizontalAlignment="Left" Margin="515,80,0,0" Width="248" Height="29" VerticalAlignment="Top" Content="version not found" HorizontalContentAlignment="Left" />
         <Button Content="Save" HorizontalAlignment="Left" Margin="616,530,0,0" VerticalAlignment="Top" Width="75" Click="Save"/>
         <Image HorizontalAlignment="Left" Height="52" Margin="549,424,0,0" VerticalAlignment="Top" Width="200" Source="{StaticResource kofi}" MouseDown="BuyMeACoffee"/>
         <Label HorizontalAlignment="Left" Margin="590,367,0,0" VerticalAlignment="Top" Content="Did this help you?" MouseDown="BuyMeACoffee" />

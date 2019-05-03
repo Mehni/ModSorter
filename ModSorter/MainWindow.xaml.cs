@@ -25,10 +25,18 @@ namespace ModSorter
         public MainWindow()
         {
             InitializeComponent();
-            modConfig = XmlFileReaderUtility.GetModsConfig();
-            PopulateMainModList();
-            SetVersion();
-            OpenFileSelectDialog();
+            try
+            {
+                modConfig = XmlFileReaderUtility.GetModsConfig();
+                PopulateMainModList();
+                SetVersion();
+                OpenFileSelectDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Issue starting Mod Sorter.");
+                Application.Current.Shutdown();
+            }
         }
 
         private void SetVersion()
@@ -38,29 +46,22 @@ namespace ModSorter
 
         private void OpenFileSelectDialog()
         {
-            try
-            {
-                if (!Directory.Exists(textBox.Content.ToString()))
-                    textBox.Content = string.Empty;
+            if (!Directory.Exists(textBox.Content.ToString()))
+                textBox.Content = string.Empty;
 
-                Ookii.Dialogs.Wpf.VistaOpenFileDialog dialog = new Ookii.Dialogs.Wpf.VistaOpenFileDialog
-                {
-                    Filter = "RimWorld.exe (*.exe)|*.exe",
-                    InitialDirectory = textBox.Content.ToString()
-                };
-                if (dialog.ShowDialog() == true)
-                {
-                    textBox.Content = dialog.FileName;
-                    TryLoadFolder(Path.GetDirectoryName(dialog.FileName));
-                }
-                else
-                {
-                    Application.Current.Shutdown();
-                }
-            }
-            catch (Exception ex)
+            Ookii.Dialogs.Wpf.VistaOpenFileDialog dialog = new Ookii.Dialogs.Wpf.VistaOpenFileDialog
             {
-                MessageBox.Show(ex.ToString());
+                Filter = "RimWorld.exe (*.exe)|*.exe",
+                InitialDirectory = textBox.Content.ToString()
+            };
+            if (dialog.ShowDialog() == true)
+            {
+                textBox.Content = dialog.FileName;
+                TryLoadFolder(Path.GetDirectoryName(dialog.FileName));
+            }
+            else
+            {
+                Application.Current.Shutdown();
             }
         }
 
@@ -95,11 +96,32 @@ namespace ModSorter
             }
             backedUpActiveMods = new List<string>(activeMods);
             backedUpAllMods = new List<Mod>(allMods);
+            PurgeModsThatWentMissing();
             backedUpView = new List<CheckBox>(mainModList.Items.Count);
             foreach (CheckBox checkBox in mainModList.Items.Cast<CheckBox>())
             {
                 backedUpView.Add(checkBox);
             }
+        }
+
+        private void PurgeModsThatWentMissing()
+        {
+            List<object> errors = new List<object>();
+            for (int i = mainModList.Items.Count - 1; i >= 0; i--)
+            {
+                var item = mainModList.Items[i];
+                if (item is CheckBox)
+                    continue;
+
+                errors.Add(item);
+                mainModList.Items.RemoveAt(i);
+            }
+            if (errors.Count == 1)
+            {
+                MessageBox.Show($"{errors.First().ToString()} was found active in ModsConfig, but mod folder could not be found. Renamed or removed from Steam?", "Mod not found");
+                return;
+            }
+            MessageBox.Show($"The following mods were found active in ModsConfig, but their folders could not be found. Renamed or removed from Steam? {Environment.NewLine + Environment.NewLine} {errors.Aggregate(Environment.NewLine, (x, y) => x + y.ToString() + Environment.NewLine)}", "Mods not found");
         }
 
         private void AddModToLists(Mod mod)
@@ -112,12 +134,15 @@ namespace ModSorter
                 mod.active = true;
                 toggleMod.IsChecked = true;
 
-                int pos = mainModList.Items.IndexOf(mod.folder);
-                mainModList.Items.Insert(pos, toggleMod);
-                mainModList.Items.Remove(mod.folder);
+                if (mainModList.Items.Contains(mod.folder))
+                {
+                    int pos = mainModList.Items.IndexOf(mod.folder);
+                    mainModList.Items.Insert(pos, toggleMod);
+                    mainModList.Items.Remove(mod.folder);
+                    return;
+                }
             }
-            else
-                mainModList.Items.Add(toggleMod);
+            mainModList.Items.Add(toggleMod);
         }
 
         private CheckBox CreateCheckBox(Mod mod)
