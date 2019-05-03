@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows;
 using System.Xml.Linq;
 
 namespace ModSorter
@@ -44,6 +45,14 @@ namespace ModSorter
 
         public static Version GetModsConfigVersion()
         {
+            if (GetModsConfig().Element("buildNumber") != null)
+            {
+                if (int.TryParse(GetModsConfig().Element("buildNumber").Value, out int build))
+                    return new Version(1, 0, build);
+                else
+                    return new Version("build: " + GetModsConfig().Element("buildNumber").Value);
+            }
+
             if (Mod.TryParseVersionString(GetModsConfig().Element("version").Value, out Version ver))
                 return ver;
 
@@ -73,7 +82,22 @@ namespace ModSorter
                 if (!Directory.Exists(About))
                     continue;
 
-                XElement aboutxml = XElement.Load(About + Path.DirectorySeparatorChar + "About.xml");
+                string aboutXmlFile = About + Path.DirectorySeparatorChar + "About.xml";
+
+                if (!File.Exists(aboutXmlFile))
+                    continue;
+
+                XElement aboutxml = null;
+
+                try
+                {
+                    aboutxml = XElement.Load(aboutXmlFile);
+                }
+                catch (System.Xml.XmlException ex)
+                {
+                    MessageBox.Show($"Error reading {aboutXmlFile}: {ex.ToString()}");
+                    continue;
+                }
 
                 IEnumerable<XElement> version = aboutxml?.Element("supportedVersions")?.Descendants()
                               ?? new List<XElement> { aboutxml?.Element("targetVersion") };
