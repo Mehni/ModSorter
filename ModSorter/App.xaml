@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:ModSorter"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <BitmapImage x:Key="kofi" UriSource="kofi.png" />
     </Application.Resources>
 </Application>
