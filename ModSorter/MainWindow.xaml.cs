@@ -34,7 +34,7 @@ namespace ModSorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "Issue starting Mod Sorter.");
+                MessageBox.Show(ex.ToString(), "Issue starting ModSorter.");
                 Application.Current.Shutdown();
             }
         }
@@ -96,7 +96,9 @@ namespace ModSorter
             }
             backedUpActiveMods = new List<string>(activeMods);
             backedUpAllMods = new List<Mod>(allMods);
+
             PurgeModsThatWentMissing();
+
             backedUpView = new List<CheckBox>(mainModList.Items.Count);
             foreach (CheckBox checkBox in mainModList.Items.Cast<CheckBox>())
             {
@@ -112,16 +114,22 @@ namespace ModSorter
                 var item = mainModList.Items[i];
                 if (item is CheckBox)
                     continue;
-
                 errors.Add(item);
                 mainModList.Items.RemoveAt(i);
+                activeMods.Remove((string)item);
             }
-            if (errors.Count == 1)
+            if (errors.Any())
             {
-                MessageBox.Show($"{errors.First().ToString()} was found active in ModsConfig, but mod folder could not be found. Renamed or removed from Steam?", "Mod not found");
-                return;
+                if (errors.Count == 1)
+                {
+                    MessageBox.Show($"{errors.First().ToString()} was found active in ModsConfig, but mod folder could not be found. Renamed or removed from Steam?",
+                        "Mod not found");
+                    return;
+                }
+                MessageBox.Show($"The following mods were found active in ModsConfig, but their folders could not be found. Renamed or removed from Steam?" +
+                    $"{Environment.NewLine + Environment.NewLine} {errors.Aggregate(Environment.NewLine, (x, y) => x + y.ToString() + Environment.NewLine)}",
+                    "Mods not found");
             }
-            MessageBox.Show($"The following mods were found active in ModsConfig, but their folders could not be found. Renamed or removed from Steam? {Environment.NewLine + Environment.NewLine} {errors.Aggregate(Environment.NewLine, (x, y) => x + y.ToString() + Environment.NewLine)}", "Mods not found");
         }
 
         private void AddModToLists(Mod mod)
@@ -355,6 +363,11 @@ namespace ModSorter
             foreach (var activeMod in activeMods)
             {
                 Mod toAdd = allMods.Find(x => x.active && x.folder == activeMod);
+                if (toAdd == null)
+                {
+                    MessageBox.Show($"{activeMod} not found");
+                    continue;
+                }
                 if (toAdd.name.ToUpper().Contains(filter))
                 {
                     var box = CreateCheckBox(toAdd);
@@ -369,6 +382,38 @@ namespace ModSorter
                     mainModList.Items.Add(box);
                 }
             }
+        }
+
+        private void LoadModsFromSave(object sender, RoutedEventArgs e)
+        {
+            var dir = Directory.Exists(XmlFileReaderUtility.directory) ? XmlFileReaderUtility.directory : string.Empty;
+
+            Ookii.Dialogs.Wpf.VistaOpenFileDialog dialog = new Ookii.Dialogs.Wpf.VistaOpenFileDialog
+            {
+                Filter = "yoursavefile.rws (*.rws)|*.rws",
+                InitialDirectory = dir
+            };
+            if (dialog.ShowDialog() == true)
+            {
+                var list = XmlFileReaderUtility.ReadModsFromSaveFile(dialog.FileName);
+
+                if (list.Any())
+                    LoadModsFromList(list);
+            }
+        }
+
+        private void LoadModsFromList(IEnumerable<string> modList)
+        {
+            activeMods.Clear();
+            activeMods.AddRange(modList);
+            ResortModList(string.Empty);
+        }
+
+        private void ResetToCore(object sender, RoutedEventArgs e)
+        {
+            activeMods.Clear();
+            activeMods.Add("Core");
+            ResortModList(string.Empty);
         }
     }
 }

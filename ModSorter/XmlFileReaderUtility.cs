@@ -11,7 +11,7 @@ namespace ModSorter
     internal class XmlFileReaderUtility
     {
         private const string filename = "ModsConfig.xml";
-        private static readonly string directory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low" + Path.DirectorySeparatorChar + GetFilePath();
+        public static readonly string directory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low" + Path.DirectorySeparatorChar + GetFilePath();
 
         public static string GetWorkShopFolder(string installDirectory)
         {
@@ -102,6 +102,25 @@ namespace ModSorter
                 IEnumerable<XElement> version = aboutxml?.Element("supportedVersions")?.Descendants()
                               ?? new List<XElement> { aboutxml?.Element("targetVersion") };
                 yield return new Mod(aboutxml.Element("name").Value, version, subFolder);
+            }
+        }
+
+        public static IEnumerable<string> ReadModsFromSaveFile(string saveFile)
+        {
+            IEnumerable<XElement> savegame = null;
+            try
+            {
+                savegame = XElement.Load(saveFile).Element("meta").Element("modIds").Descendants();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error reading {saveFile}: {ex.ToString()}");
+                yield break;
+            }
+
+            foreach (var item in savegame)
+            {
+                yield return item.Value;
             }
         }
     }
