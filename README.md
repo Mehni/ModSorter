@@ -7,6 +7,8 @@ Tired of having to wait ages just to (de)activate a mod? Spending more time shuf
 - Can sort mods.
 - Can deactivate mods.
 - Can activate mods.
+- Can load modlists from saves.
+- Can reset your list to just Core.
 - Can search through that 300+ long modlist to find that one special mod you need to activate.
 - Crashes when you do really dumb stuff. ~~I tried to make it idiot-proof, but the local idiot ran off so I tested my own stuff.~~ Update: Local idiot located fun bugs and edge cases, upgraded to local hero.
 
