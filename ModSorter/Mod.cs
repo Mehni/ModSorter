@@ -60,7 +60,9 @@ namespace ModSorter
         private Version MaxSupportedVersion
             => supportedVersions.Any(x => x == XmlFileReaderUtility.GetModsConfigVersion())
                 ? supportedVersions.FirstOrDefault(x => x == XmlFileReaderUtility.GetModsConfigVersion())
-                : supportedVersions.OrderByDescending(x => x?.Major)?.ThenBy(x => x?.Minor).FirstOrDefault() ?? new Version(0,0);
+                : supportedVersions.OrderByDescending(x => x?.Major).ThenBy(x => x?.Minor).FirstOrDefault()
+                ?? supportedVersions.FirstOrDefault()
+                ?? new Version(0,0);
 
         public static bool TryParseVersionString(string str, out Version version)
         {

@@ -99,8 +99,8 @@ namespace ModSorter
                     continue;
                 }
 
-                IEnumerable<XElement> version = aboutxml?.Element("supportedVersions")?.Descendants()
-                              ?? new List<XElement> { aboutxml?.Element("targetVersion") };
+                IEnumerable<XElement> version = aboutxml.Element("supportedVersions")?.Descendants()
+                              ?? new List<XElement> { aboutxml.Element("targetVersion") };
                 yield return new Mod(aboutxml.Element("name").Value, version, subFolder);
             }
         }

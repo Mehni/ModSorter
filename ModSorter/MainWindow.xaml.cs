@@ -365,7 +365,6 @@ namespace ModSorter
                 Mod toAdd = allMods.Find(x => x.active && x.folder == activeMod);
                 if (toAdd == null)
                 {
-                    MessageBox.Show($"{activeMod} not found");
                     continue;
                 }
                 if (toAdd.name.ToUpper().Contains(filter))
@@ -405,7 +404,16 @@ namespace ModSorter
         private void LoadModsFromList(IEnumerable<string> modList)
         {
             activeMods.Clear();
-            activeMods.AddRange(modList);
+            foreach (string modFolder in modList)
+            {
+                activeMods.Add(modFolder);
+
+                Mod mod = allMods.FirstOrDefault(x => x.folder == modFolder);
+                if (mod != null)
+                {
+                    mod.active = true;
+                }
+            }
             ResortModList(string.Empty);
         }
 
@@ -413,6 +421,7 @@ namespace ModSorter
         {
             activeMods.Clear();
             activeMods.Add("Core");
+            allMods.First(x => x.folder == "Core").active = true;
             ResortModList(string.Empty);
         }
     }
