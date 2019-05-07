@@ -404,6 +404,7 @@ namespace ModSorter
         private void LoadModsFromList(IEnumerable<string> modList)
         {
             activeMods.Clear();
+            allMods.ForEach(x => x.active = false);
             foreach (string modFolder in modList)
             {
                 activeMods.Add(modFolder);
@@ -421,6 +422,7 @@ namespace ModSorter
         {
             activeMods.Clear();
             activeMods.Add("Core");
+            allMods.ForEach(x => x.active = false);
             allMods.First(x => x.folder == "Core").active = true;
             ResortModList(string.Empty);
         }
