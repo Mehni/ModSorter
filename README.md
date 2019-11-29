@@ -20,6 +20,10 @@ Tired of having to wait ages just to (de)activate a mod? Spending more time shuf
 
 [Releases](https://github.com/Mehni/ModSorter/releases/latest)
 
+## Compatibility
+
+Windows only.
+
 ## Wanna show your appreciation? Buy me a coffee
 
 [![image](https://i.imgur.com/QGcents.png)](https://ko-fi.com/mehnicreates)
